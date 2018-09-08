@@ -4,6 +4,6 @@ How to execute:
 
 python setup.py install
 
-upload the document to your notebook or
+upload the document to your Jypiter notebook or
 
 python pca.py
