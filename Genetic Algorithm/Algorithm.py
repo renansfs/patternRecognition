@@ -17,17 +17,20 @@ def getBestGeneration(generations):
 def genetico(df: pd.DataFrame, max_genoma_size, mutation_rate, crossover_rate, max_generation_times, features, class_name, max_gene_size):
     generations = dict()
     generation = list()
+    bestGenome = list()
     
     #Cria o varios genomas por geracao
     for _ in range(max_gene_size):
         genome = list()
-        for _ in range(max_genoma_size):
+        for _ in range(np.random.randint(len(features))):
             index = features[np.random.randint(len(features))]
             genome.append(index)
         generation.append(genome)
-    
+
+        genome = generation[0]
+        length = 0
         #Maxima quantidade de rodadas por geracao
-        for genome in generation:
+        for _ in range(max_generation_times):
             #Seleciona apenas as dimensoes do genome atual
             evaluate = df.loc[:, genome]
             #Retorna o dicionario com variancias e dimensoes
@@ -35,12 +38,12 @@ def genetico(df: pd.DataFrame, max_genoma_size, mutation_rate, crossover_rate, m
             cross = crossover(crossover_rate, genome, variance, generation)
             mutacao(df, mutation_rate, cross, features)
             #Concatena a classe a esse genoma
-            generation = pd.concat([evaluate, df[[class_name]]], axis=1)
+            gen = pd.concat([evaluate, df[[class_name]]], axis=1)
             #Verifica o resultado com a distancia
-            measure = fitness(generation, class_name=class_name, target_feature_number=max_genoma_size)
-            #Dicionario que adiciona o tamanho e o genoma
-            generations[measure] = cross
-
+            length = fitness(gen, class_name=class_name, target_feature_number=max_genoma_size)
+            #Reinsere o genoma
+            genome = cross
+        generations[length] = genome  
     return generations
 
 #Mutacao
@@ -54,7 +57,8 @@ def mutacao(df: pd.DataFrame, mut_rate, genome, features):
     #Verificar se a mutacao vai acontecer
     if mut_rate > prob:
         #Pega o index do set total e adiciona no indexG random
-        indexG = np.random.randint(len(genome))
+        size = len(genome)-1
+        indexG = np.random.randint(size)
         indexF = np.random.randint(len(features))
         genome[indexG] = features[indexF]
 
@@ -76,7 +80,7 @@ def crossover(crossover_rate, genome, variances, generation):
             #Index random da geracao
             indexGeneration = int(np.random.randint(len(generation)))
             #Index random do Gene
-            indexGene = int(np.random.randint(len(generation[0])))
+            indexGene = int(np.random.randint(len(generation[indexGeneration])))
             #Adiciona a nova geracao aquele gene
             newcross.append(generation[indexGeneration][indexGene])
         else:
