@@ -57,9 +57,8 @@ def mutacao(df: pd.DataFrame, mut_rate, genome, features):
     #Verificar se a mutacao vai acontecer
     if mut_rate > prob:
         #Pega o index do set total e adiciona no indexG random
-        size = len(genome)-1
-        indexG = np.random.randint(size)
-        indexF = np.random.randint(len(features))
+        indexG = np.random.randint(0, len(genome))
+        indexF = np.random.randint(0, len(features))
         genome[indexG] = features[indexF]
 
 
