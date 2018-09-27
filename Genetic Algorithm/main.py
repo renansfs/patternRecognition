@@ -6,6 +6,6 @@ features = ['class','node-caps','deg-malig','breast','irradiat','age_20-29','age
 if __name__ == "__main__":
     filename = 'breast_cancer_final.csv'
     breast_cancer_dataset = pd.read_csv(filename, names=features)
-    result = Algorithm.genetico(breast_cancer_dataset, max_genoma_size = 5, mutation_rate=0.03, crossover_rate=0.5, max_generation_times=100, features=features, class_name='class')
+    result = Algorithm.genetico(breast_cancer_dataset, max_genoma_size = 5, mutation_rate=0.03, crossover_rate=0.5, max_generation_times=100, features=features, class_name='class', max_gene_size=2)
     value = Algorithm.getBestGeneration(result)
-    print(("Valor: %s Set: %s") % (value, result[value]))
+    #print(("Valor: %s Set: %s") % (value, result[value]))

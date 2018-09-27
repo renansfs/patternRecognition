@@ -3,9 +3,9 @@ import numpy as np
 import math as mt
 import operator as op
 
+
 def getBestGeneration(generations):
     return max(generations.items(), key=op.itemgetter(1))[0]
-
 
 #Chamada do Algoritmo
 #df: dataframe
@@ -14,22 +14,33 @@ def getBestGeneration(generations):
 #crossover_rate: taxa de crossover
 #features name
 #Retonar a melhor geracao
-def genetico(df: pd.DataFrame, max_genoma_size, mutation_rate, crossover_rate, max_generation_times, features, class_name):
+def genetico(df: pd.DataFrame, max_genoma_size, mutation_rate, crossover_rate, max_generation_times, features, class_name, max_gene_size):
     generations = dict()
-    genome = list()
+    generation = list()
     
-    for _ in range(max_genoma_size):
-        index = features[np.random.randint(len(features))]
-        genome.append(index)
+    #Cria o varios genomas por geracao
+    for _ in range(max_gene_size):
+        genome = list()
+        for _ in range(max_genoma_size):
+            index = features[np.random.randint(len(features))]
+            genome.append(index)
+        generation.append(genome)
+    
+        #Maxima quantidade de rodadas por geracao
+        for genome in generation:
+            #Seleciona apenas as dimensoes do genome atual
+            evaluate = df.loc[:, genome]
+            #Retorna o dicionario com variancias e dimensoes
+            variance = variances(evaluate)
+            cross = crossover(crossover_rate, genome, variance, generation)
+            mutacao(df, mutation_rate, cross, features)
+            #Concatena a classe a esse genoma
+            generation = pd.concat([evaluate, df[[class_name]]], axis=1)
+            #Verifica o resultado com a distancia
+            measure = fitness(generation, class_name=class_name, target_feature_number=max_genoma_size)
+            #Dicionario que adiciona o tamanho e o genoma
+            generations[measure] = cross
 
-    for _ in range(max_generation_times):
-        evaluate = df.loc[:, genome]
-        variance = variances(evaluate)
-        cross = crossover(crossover_rate, genome, variance, features)
-        mutacao(df, mutation_rate, cross, features)
-        generation = pd.concat([evaluate, df[[class_name]]], axis=1)
-        measure = fitness(generation, class_name=class_name, target_feature_number=max_genoma_size)
-        generations[measure] = cross
     return generations
 
 #Mutacao
@@ -38,8 +49,11 @@ def genetico(df: pd.DataFrame, max_genoma_size, mutation_rate, crossover_rate, m
 #genoma: features do genoma
 #features: features total
 def mutacao(df: pd.DataFrame, mut_rate, genome, features):
+    #Random ate 100
     prob = np.random.randint(100)
+    #Verificar se a mutacao vai acontecer
     if mut_rate > prob:
+        #Pega o index do set total e adiciona no indexG random
         indexG = np.random.randint(len(genome))
         indexF = np.random.randint(len(features))
         genome[indexG] = features[indexF]
@@ -50,16 +64,26 @@ def mutacao(df: pd.DataFrame, mut_rate, genome, features):
 #genome: features do genoma
 #variances: lista com variancias
 #features: features total
-def crossover(crossover_rate, genome, variances, features):
+def crossover(crossover_rate, genome, variances, generation):
+    #Random para deletar as dimensoes conforme o crossover_Rate
     random = np.random.rand() * crossover_rate
-    cross = []
+    #Nome do novo genoma
+    newcross = []
+    #Como o genoma == variancias
     for feature in variances:
+        #se o random for menor que variancia da dimensao atual
         if random < variances[feature]:
-            index = int(np.random.randint(len(features)))
-            cross.append(features[index])
+            #Index random da geracao
+            indexGeneration = int(np.random.randint(len(generation)))
+            #Index random do Gene
+            indexGene = int(np.random.randint(len(generation[0])))
+            #Adiciona a nova geracao aquele gene
+            newcross.append(generation[indexGeneration][indexGene])
         else:
-            cross.append(feature)
-    return cross
+            #Caso seja menor, adiciona a atual
+            newcross.append(feature)
+        #Retorna o genoma novo (filho)
+    return newcross
 
 #Variancias
 #df: DataFrame
